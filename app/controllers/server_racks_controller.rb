@@ -61,6 +61,14 @@ class ServerRacksController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_server_rack
       @server_rack = ServerRack.find(params.expect(:id))
+      
+      udm = ServerComponent.new("UDM", 1, 12)
+      switch = ServerComponent.new("Network Switch", 1, 12)
+      patch_panel = ServerComponent.new("Patch Panel", 1, 7)
+      ups = ServerComponent.new("UPS", 2, 11)
+      server = ServerComponent.new("Main", 4, 19)
+      empty = ServerComponent.new("Empty", 1, 1)
+      @components = [patch_panel, udm, switch, empty, empty, empty, empty, server, empty, ups] 
     end
 
     # Only allow a list of trusted parameters through.
@@ -68,3 +76,5 @@ class ServerRacksController < ApplicationController
       params.expect(server_rack: [ :name, :height, :depth ])
     end
 end
+
+ServerComponent = Struct.new(:name, :height, :depth)

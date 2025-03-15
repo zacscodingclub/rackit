@@ -1,0 +1,7 @@
+<ul id="server-rack-vizualization" class="grid grid-rows-" +  <%= @server_rack.depth.to_int %> + " gap-1">
+    <% @components.each do |component| %>
+        <%= render "component", component: component %>
+    <% end %>
+</ul>
+
+<%= javascript_include_tag 'packs/server_racks' %>
