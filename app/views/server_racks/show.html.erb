@@ -1,0 +1,40 @@
+<% content_for :title, "Showing server rack" %>
+
+<div class="md:w-2/3 w-full">
+  <% if notice.present? %>
+    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
+  <% end %>
+
+  <h1 class="font-bold text-4xl">Showing server rack</h1>
+
+  <%= render @server_rack %>
+
+  <%= link_to "Edit this server rack", edit_server_rack_path(@server_rack), class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <%= link_to "Back to server racks", server_racks_path, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <div class="sm:inline-block mt-2 sm:mt-0 sm:ml-2">
+    <%= button_to "Destroy this server rack", @server_rack, method: :delete, class: "w-full rounded-md px-3.5 py-2.5 text-white bg-red-600 hover:bg-red-500 font-medium cursor-pointer", data: { turbo_confirm: "Are you sure?" } %>
+  </div>
+
+  <ul id="server-rack-representation" class="grid grid-cols-32 gap-1" style="border: solid 1px black;">
+    <li class="component draggable col-start-1 col-end-7" draggable="true">01 | Patch Panel</li>
+    <li class="component draggable col-start-1 col-end-12" draggable="true">02 | UDM Pro</li>
+    <li class="component draggable col-start-1 col-end-12" draggable="true">03 | Network Switch</li>
+    <li class="empty draggable col-span-32" draggable="true">04 | Empty</li>
+    <li class="empty draggable col-span-32" draggable="true">05 | Empty</li>
+    <li class="empty draggable col-span-32" draggable="true">06 | Empty</li>
+    <li class="empty draggable col-span-32" draggable="true">07 | Empty</li>
+    <li class="empty draggable col-span-32" draggable="true">08 | Empty</li>
+    <li class="empty draggable col-span-32" draggable="true">09 | Empty</li>
+    <li class="empty draggable col-span-32" draggable="true">10 | Empty</li>
+    <li class="empty draggable col-span-32" draggable="true">11 | Empty</li>
+    <li class="component draggable col-start-1 col-end-19" draggable="true">12 | Main</li>
+    <li class="component draggable col-start-1 col-end-19" draggable="true">13 | Main</li>
+    <li class="component draggable col-start-1 col-end-19" draggable="true">14 | Main</li>
+    <li class="component draggable col-start-1 col-end-19" draggable="true">15 | Main</li>
+    <li class="empty draggable col-span-32" draggable="true">16 | Empty</li>
+    <li class="component draggable col-start-1 col-end-11" draggable="true">17 | UPS</li>
+    <li class="component draggable col-start-1 col-end-11" draggable="true">18 | UPS</li>
+  </ul>
+</div>
+
+<%= javascript_include_tag 'packs/server_racks' %>

@@ -1,0 +1,2 @@
+class ServerRack < ApplicationRecord
+end

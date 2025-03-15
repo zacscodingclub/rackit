@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+#server-rack-representation {
+    border: solid 1px black;
+  }
+  
+.component {
+    background-color: lightgray;
+    padding: 5px;
+    text-align: center;
+    border: solid 1px #ccc;
+    cursor: move;
+}
+
+.empty {
+    background-color: white;
+    padding: 5px;
+    text-align: center;
+    border: dashed 1px grey;
+    cursor: move;
+}
