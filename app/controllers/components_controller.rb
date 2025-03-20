@@ -44,6 +44,6 @@ class ComponentsController < ApplicationController
     end
 
     def component_params
-      params.require(:component).permit(:name, :description, :height, :depth)
+      params.require(:component).permit(:name, :description, :height, :depth, :color)
     end
 end

@@ -21,14 +21,62 @@
     <%= form.text_area :description, rows: 4, class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-800 leading-tight focus:outline-none focus:shadow-outline" %>
   </div>
 
-  <div class="mb-4">
-    <%= form.label :height, "Height (U)", class: "block text-gray-700 dark:text-gray-300 font-bold mb-2" %>
-    <%= form.number_field :height, min: 1, class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-800 leading-tight focus:outline-none focus:shadow-outline" %>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div>
+      <%= form.label :height, "Height (U)", class: "block text-gray-700 dark:text-gray-300 font-bold mb-2" %>
+      <%= form.number_field :height, min: 1, class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-800 leading-tight focus:outline-none focus:shadow-outline" %>
+    </div>
+
+    <div>
+      <%= form.label :depth, "Depth (inches)", class: "block text-gray-700 dark:text-gray-300 font-bold mb-2" %>
+      <%= form.number_field :depth, min: 1, class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-800 leading-tight focus:outline-none focus:shadow-outline" %>
+    </div>
   </div>
 
   <div class="mb-4">
-    <%= form.label :depth, "Depth (inches)", class: "block text-gray-700 dark:text-gray-300 font-bold mb-2" %>
-    <%= form.number_field :depth, min: 1, class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-800 leading-tight focus:outline-none focus:shadow-outline" %>
+    <%= form.label :color, "Component Color", class: "block text-gray-700 dark:text-gray-300 font-bold mb-2" %>
+    
+    <div class="flex items-center gap-4 mb-2">
+      <div class="flex items-center">
+        <!-- Custom styled color picker -->
+        <div class="relative h-10 w-12 overflow-hidden rounded border border-gray-300">
+          <%= form.color_field :color, 
+              class: "absolute top-0 left-0 h-10 w-12 cursor-pointer opacity-0", 
+              oninput: "updateColorPreview(this.value)" %>
+          <!-- Color preview inside the swatch -->
+          <div class="h-full w-full"
+               id="color_swatch"
+               style="background-color: <%= component.color || '#3B82F6' %>;"></div>
+        </div>
+      </div>
+      
+      <div class="flex-grow">
+        <!-- Larger color preview -->
+        <div id="color_preview" 
+             class="h-10 rounded-md border border-gray-300"
+             style="background-color: <%= component.color || '#3B82F6' %>;"></div>
+      </div>
+      
+      <div class="flex items-center">
+        <span class="text-sm text-gray-700 dark:text-gray-300 font-mono" id="color_hex_value">
+          <%= component.color || "#3B82F6" %>
+        </span>
+      </div>
+    </div>
+    
+    <script>
+      function updateColorPreview(colorHex) {
+        document.getElementById('color_swatch').style.backgroundColor = colorHex;
+        document.getElementById('color_preview').style.backgroundColor = colorHex;
+        document.getElementById('color_hex_value').textContent = colorHex.toUpperCase();
+      }
+      
+      // Initialize with current value on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        const colorField = document.querySelector('input[type="color"]');
+        updateColorPreview(colorField.value);
+      });
+    </script>
   </div>
 
   <div class="flex items-center justify-between">

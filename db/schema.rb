@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_20_221140) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_20_231622) do
   create_table "components", force: :cascade do |t|
     t.string "name"
     t.text "description"
@@ -18,6 +18,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_20_221140) do
     t.integer "depth"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "color", default: "#4F46E5"
   end
 
   create_table "rack_components", force: :cascade do |t|
