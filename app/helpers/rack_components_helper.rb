@@ -1,0 +1,2 @@
+module RackComponentsHelper
+end

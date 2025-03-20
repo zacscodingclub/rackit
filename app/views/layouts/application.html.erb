@@ -22,7 +22,18 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="bg-white dark:bg-gray-900 text-black dark:text-white">
+    <header class="flex justify-between items-center p-5">
+      <h1 class="text-2xl font-bold"><%= content_for(:title) || "Rackit" %></h1>
+      <div class="flex gap-4">
+        <button class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded">
+          <%= link_to "Server racks", server_racks_path %>
+        </button>
+        <button class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded">
+          <%= link_to "Components", components_path %>
+        </button>
+      </div>
+    </header>
     <main class="container mx-auto mt-28 px-5 flex">
       <%= yield %>
     </main>

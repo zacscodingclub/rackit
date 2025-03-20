@@ -1,11 +1,11 @@
 <% if component.name == "Empty" %>
-<li class="empty draggable col-span-32" draggable="true">
+<li class="empty draggable col-start-1 col-end-6" draggable="true">
     <%= component.name %>
 </li>
 <% else %>
+<li class="component draggable col-start-1 col-end-<%= component.depth %>" draggable="true">
     <% component.height.times do |i| %>
-        <li class="component draggable col-start-1 col-end-<%= component.depth %>" draggable="true">
-            <%= component.name %>
-        </li>
+        <p><%= component.name %> : <%= component.depth %>"</p>
     <% end %>
+</li>
 <% end %>

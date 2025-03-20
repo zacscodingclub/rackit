@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  server_rack: one
+  component: one
+  position_y: 1
+
+two:
+  server_rack: two
+  component: two
+  position_y: 1

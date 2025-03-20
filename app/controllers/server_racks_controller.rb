@@ -1,5 +1,5 @@
 class ServerRacksController < ApplicationController
-  before_action :set_server_rack, only: %i[ show edit update destroy ]
+  before_action :set_server_rack, only: %i[ show edit update destroy check_position ]
 
   # GET /server_racks or /server_racks.json
   def index
@@ -56,25 +56,47 @@ class ServerRacksController < ApplicationController
       format.json { head :no_content }
     end
   end
+  
+  # GET /server_racks/1/check_position
+  def check_position
+    component_id = params[:component_id]
+    position = params[:position].to_i
+    
+    component = Component.find(component_id)
+    
+    # Check if position is valid
+    if position < 1 || position + component.height - 1 > @server_rack.height
+      render json: { available: false, message: "Position out of rack bounds" }
+      return
+    end
+    
+    # Check if position is available
+    available = @server_rack.position_available?(position, component.height)
+    
+    if available
+      render json: { available: true }
+    else
+      render json: { 
+        available: false, 
+        message: "Position conflicts with existing components"
+      }
+    end
+  end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_server_rack
-      @server_rack = ServerRack.find(params.expect(:id))
+      @server_rack = ServerRack.find(params[:id])
       
-      udm = ServerComponent.new("UDM", 1, 12)
-      switch = ServerComponent.new("Network Switch", 1, 12)
-      patch_panel = ServerComponent.new("Patch Panel", 1, 7)
-      ups = ServerComponent.new("UPS", 2, 11)
-      server = ServerComponent.new("Main", 4, 19)
-      empty = ServerComponent.new("Empty", 1, 1)
-      @components = [patch_panel, udm, switch, empty, empty, empty, empty, server, empty, ups] 
+      # Load the components for this rack through the rack_components association
+      @rack_components = @server_rack.rack_components.includes(:component).order(:position_y)
+      
+      # Simply use the rack_components directly for visualization
+      # No need for a separate struct since we have our Component model
     end
 
     # Only allow a list of trusted parameters through.
     def server_rack_params
-      params.expect(server_rack: [ :name, :height, :depth ])
+      params.require(:server_rack).permit(:name, :height, :depth)
     end
 end
-
-ServerComponent = Struct.new(:name, :height, :depth)

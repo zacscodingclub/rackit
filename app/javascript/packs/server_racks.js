@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const serverRack = document.querySelector('ul#server-rack-vizualization');
+    const serverRack = document.querySelector('div#server-rack-vizualization');
     let draggedItem = null;
     
     serverRack.addEventListener('dragstart', (event) => {

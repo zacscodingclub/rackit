@@ -1,0 +1,35 @@
+<div class="w-full">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Components</h1>
+    <%= link_to "New Component", new_component_path, class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+      <thead>
+        <tr class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+          <th class="py-2 px-4 border-b text-left">Name</th>
+          <th class="py-2 px-4 border-b text-left">Description</th>
+          <th class="py-2 px-4 border-b text-center">Height (U)</th>
+          <th class="py-2 px-4 border-b text-center">Depth (inches)</th>
+          <th class="py-2 px-4 border-b text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @components.each do |component| %>
+          <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+            <td class="py-3 px-4"><%= component.name %></td>
+            <td class="py-3 px-4"><%= truncate(component.description, length: 50) %></td>
+            <td class="py-3 px-4 text-center"><%= component.height %></td>
+            <td class="py-3 px-4 text-center"><%= component.depth %></td>
+            <td class="py-3 px-4 text-center">
+              <%= link_to "View", component, class: "text-blue-500 hover:text-blue-700 mr-2" %>
+              <%= link_to "Edit", edit_component_path(component), class: "text-yellow-500 hover:text-yellow-700 mr-2" %>
+              <%= button_to "Delete", component, method: :delete, class: "text-red-500 hover:text-red-700 inline", form: { data: { turbo_confirm: "Are you sure?" } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
