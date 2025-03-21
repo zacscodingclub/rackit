@@ -166,6 +166,18 @@ function setupDraggableComponents() {
 function showDropZones() {
     hideDropZones(); // Clear any existing drop zones first
     
+    // Show the trash bin when dragging
+    const trashBin = document.getElementById('trash-bin');
+    if (trashBin) {
+        trashBin.classList.remove('hidden');
+        trashBin.classList.add('flex', 'animate-pulse');
+        
+        // Setup trash bin drop event handlers
+        trashBin.addEventListener('dragover', handleTrashDragOver);
+        trashBin.addEventListener('dragleave', handleTrashDragLeave);
+        trashBin.addEventListener('drop', handleTrashDrop);
+    }
+    
     // Calculate rack dimensions
     const containerHeight = 40; // Each U is 40px high
     const rackHeight = parseInt(rackVisualization.style.height) / containerHeight;
@@ -394,6 +406,19 @@ function hideDropZones() {
     document.querySelectorAll('.drop-zone').forEach(zone => {
         zone.remove();
     });
+    
+    // Hide and reset the trash bin
+    const trashBin = document.getElementById('trash-bin');
+    if (trashBin) {
+        trashBin.classList.add('hidden');
+        trashBin.classList.remove('flex', 'animate-pulse', 'bg-red-100', 'border-red-500', 'text-red-500');
+        trashBin.classList.add('bg-gray-100', 'dark:bg-gray-700', 'border-gray-300', 'dark:border-gray-600', 'text-gray-500', 'dark:text-gray-400');
+        
+        // Remove event listeners
+        trashBin.removeEventListener('dragover', handleTrashDragOver);
+        trashBin.removeEventListener('dragleave', handleTrashDragLeave);
+        trashBin.removeEventListener('drop', handleTrashDrop);
+    }
 }
 
 // Update component position via Turbo Streams
@@ -559,3 +584,134 @@ document.addEventListener('turbo:load', initializeRackDragDrop);
 
 // Also listen for our custom event for after Turbo Stream updates
 document.addEventListener('turbo-stream-render-complete', initializeRackDragDrop);
+
+// Trash bin event handlers
+function handleTrashDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Visual feedback for trash bin hover
+    this.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'border-gray-300', 'dark:border-gray-600', 'text-gray-500', 'animate-pulse');
+    this.classList.add('bg-red-100', 'border-red-500', 'text-red-500', 'scale-110');
+    
+    // Update the text and icon
+    this.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span class="font-bold">Release to Delete!</span>
+    `;
+}
+
+function handleTrashDragLeave(e) {
+    // Reset trash bin appearance
+    this.classList.add('bg-gray-100', 'dark:bg-gray-700', 'border-gray-300', 'dark:border-gray-600', 'text-gray-500', 'animate-pulse');
+    this.classList.remove('bg-red-100', 'border-red-500', 'text-red-500', 'scale-110');
+    
+    // Reset text and icon
+    this.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span>Drop to Delete</span>
+    `;
+}
+
+function handleTrashDrop(e) {
+    e.preventDefault();
+    
+    if (!draggedComponent) {
+        console.error('No dragged component found when drop occurred');
+        return;
+    }
+    
+    const componentId = draggedComponent.dataset.componentId;
+    const componentName = draggedComponent.dataset.componentName;
+    
+    // Show confirmation dialog
+    if (confirm(`Are you sure you want to delete "${componentName}" from this rack?`)) {
+        // Delete the component - send DELETE request
+        deleteComponent(componentId);
+    } else {
+        // If canceled, just hide drop zones and reset
+        hideDropZones();
+    }
+}
+
+// Delete component via AJAX
+function deleteComponent(componentId) {
+    // Show loading overlay
+    showLoadingOverlay();
+    
+    console.log(`Deleting component ${componentId}`);
+    
+    // Send DELETE request
+    fetch(`/racks/${rackId}/rack_components/${componentId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-Token': csrfToken,
+            'Accept': 'text/vnd.turbo-stream.html, application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to delete component');
+        }
+        return response.text();
+    })
+    .then(html => {
+        // Process Turbo Stream response
+        if (html && html.includes('turbo-stream')) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const streams = doc.querySelectorAll('turbo-stream');
+            
+            streams.forEach(stream => {
+                const action = stream.getAttribute('action');
+                const target = stream.getAttribute('target');
+                const template = stream.querySelector('template');
+                
+                if (action && target && template) {
+                    const content = template.content.cloneNode(true);
+                    const targetElement = document.getElementById(target);
+                    
+                    if (targetElement) {
+                        if (action === 'replace') {
+                            targetElement.innerHTML = '';
+                            targetElement.appendChild(content);
+                        } else if (action === 'remove') {
+                            targetElement.remove();
+                        } else if (action === 'append') {
+                            targetElement.appendChild(content);
+                        } else if (action === 'prepend') {
+                            targetElement.prepend(content);
+                        }
+                    }
+                }
+            });
+            
+            // Dispatch custom event
+            document.dispatchEvent(new CustomEvent('turbo-stream-render-complete'));
+        } else {
+            // If not a turbo stream response, reload the page as fallback
+            window.location.reload();
+            return;
+        }
+        
+        // Hide the loading overlay
+        setTimeout(() => {
+            hideLoadingOverlay();
+            
+            // Reinitialize drag and drop
+            initializeRackDragDrop();
+            
+            // Show success message
+            showSuccessMessage('Component removed from rack successfully');
+        }, 300);
+    })
+    .catch(error => {
+        hideLoadingOverlay();
+        showErrorMessage(error.message || 'Failed to delete component');
+        console.error('Error:', error);
+    });
+}

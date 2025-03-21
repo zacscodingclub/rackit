@@ -137,17 +137,74 @@
                 <div class="sm:w-2/3">
                   <div id="position-status" class="text-xs mb-1"></div>
                   <%= form.label :position_y, "Position (U):", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-                  <div class="mt-1 relative">
-                    <%= form.number_field :position_y, 
-                        id: "position-input",
-                        min: 1, 
-                        max: @server_rack.height,
-                        value: 1, 
-                        class: "block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" %>
-                    
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-8">
-                      <span id="position-indicator" class="text-xs"></span>
+                  <div class="mt-1">
+                    <!-- Position input with control buttons -->
+                    <div class="relative border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden shadow-sm">
+                      <!-- Main control container -->
+                      <div class="flex h-14">
+                        <!-- Decrement button -->
+                        <button type="button" 
+                                class="flex-none w-14 h-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border-r border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
+                                onclick="adjustPosition(-1);">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4" />
+                          </svg>
+                        </button>
+                        
+                        <!-- Position display -->
+                        <div class="flex-grow relative bg-white dark:bg-gray-800">
+                          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <div class="text-center">
+                              <span id="position-display" class="text-2xl font-bold text-gray-800 dark:text-gray-200 transition-colors">1</span>
+                              <span class="ml-1 text-gray-500 dark:text-gray-400">U</span>
+                            </div>
+                            <span id="position-indicator" class="text-xs text-blue-500 mt-1 block text-center"></span>
+                          </div>
+                          <%= form.number_field :position_y, 
+                              id: "position-input",
+                              min: 1, 
+                              max: @server_rack.height,
+                              value: 1,
+                              class: "sr-only",
+                              onchange: "updatePositionDisplay(this.value); checkPositionAvailability();" %>
+                        </div>
+                        
+                        <!-- Increment button -->
+                        <button type="button" 
+                                class="flex-none w-14 h-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border-l border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
+                                onclick="adjustPosition(1);">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v12m6-6H6" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <!-- Position status bar -->
+                      <div class="h-2 bg-gray-200 dark:bg-gray-700">
+                        <div id="available-positions-bar" class="h-full bg-blue-500 transition-all duration-300" style="width: 100%"></div>
+                      </div>
                     </div>
+                    
+                    <script>
+                      // Function to adjust position with buttons
+                      function adjustPosition(delta) {
+                        const input = document.getElementById('position-input');
+                        const currentValue = parseInt(input.value) || 1;
+                        const newValue = currentValue + delta;
+                        
+                        // Check bounds
+                        if (newValue >= input.min && newValue <= input.max) {
+                          input.value = newValue;
+                          updatePositionDisplay(newValue);
+                          checkPositionAvailability();
+                        }
+                      }
+                      
+                      // Update the position display
+                      function updatePositionDisplay(value) {
+                        document.getElementById('position-display').textContent = value;
+                      }
+                    </script>
                   </div>
                 </div>
                 
@@ -284,15 +341,59 @@
             function setPositionStatus(status, message) {
               const positionStatus = document.getElementById('position-status');
               const addButton = document.getElementById('add-button');
+              const positionBar = document.getElementById('available-positions-bar');
+              const positionDisplay = document.getElementById('position-display');
+              const controlContainer = positionDisplay.closest('.relative').parentElement;
               
               if (status === 'valid') {
-                positionStatus.className = 'text-xs text-green-600 dark:text-green-400 mb-1';
-                positionStatus.innerText = '✓ ' + message;
+                // Set classes for valid state
+                positionStatus.className = 'flex items-center py-1 px-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md mb-2 transition-all duration-200';
+                positionStatus.innerHTML = `
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  ${message}
+                `;
+                // Enable the add button
                 addButton.disabled = false;
+                
+                // Update position display
+                positionDisplay.classList.remove('text-red-500');
+                positionDisplay.classList.add('text-green-500');
+                
+                // Add green border indication to the control container
+                controlContainer.classList.remove('border-red-500');
+                controlContainer.classList.add('border-green-500');
+                
+                // Update position bar
+                positionBar.style.width = '100%';
+                positionBar.classList.remove('bg-red-500');
+                positionBar.classList.add('bg-green-500');
+                
               } else {
-                positionStatus.className = 'text-xs text-red-600 dark:text-red-400 mb-1';
-                positionStatus.innerText = '✗ ' + message;
+                // Set classes for invalid state
+                positionStatus.className = 'flex items-center py-1 px-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md mb-2 transition-all duration-200';
+                positionStatus.innerHTML = `
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  ${message}
+                `;
+                // Disable the add button
                 addButton.disabled = true;
+                
+                // Update position display
+                positionDisplay.classList.remove('text-green-500');
+                positionDisplay.classList.add('text-red-500');
+                
+                // Add red border indication to the control container
+                controlContainer.classList.remove('border-green-500');
+                controlContainer.classList.add('border-red-500');
+                
+                // Update position bar (show 33% width for error)
+                positionBar.style.width = '33%';
+                positionBar.classList.remove('bg-green-500');
+                positionBar.classList.add('bg-red-500');
               }
             }
           </script>
