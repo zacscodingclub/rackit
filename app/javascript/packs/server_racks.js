@@ -213,7 +213,7 @@ function handleDragStart(e) {
     this.classList.add('opacity-50');
     
     try {
-        // Store component data in dataTransfer
+        // Store component data in dataTransfer - SIMPLIFY for better compatibility
         const data = {
             componentId: this.dataset.componentId,
             height: componentHeight,
@@ -221,36 +221,20 @@ function handleDragStart(e) {
             name: this.dataset.componentName || ''
         };
         
-        // Set multiple formats for better browser compatibility
-        e.dataTransfer.setData('text/plain', `Component:${data.componentId}:${data.position}`);
+        // Start with just a basic text format that all browsers support
+        e.dataTransfer.setData('text', data.componentId);
         
-        try {
-            // Try to set JSON data - this can fail in some browsers
-            e.dataTransfer.setData('application/json', JSON.stringify(data));
-        } catch (jsonError) {
-            console.warn("Could not set JSON data format:", jsonError);
-            // Continue anyway - we have the text format as backup
-        }
+        // IMPORTANT: Don't try fancy formats, stick with what works
         
         // Set allowed drag effect
         e.dataTransfer.effectAllowed = 'move';
         
-        // Set a drag image to improve visual feedback
-        // Use the component itself as the drag image
-        try {
-            // Calculate center point for drag image
-            const rect = this.getBoundingClientRect();
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            e.dataTransfer.setDragImage(this, centerX, centerY);
-        } catch (imgError) {
-            console.warn("Could not set drag image:", imgError);
-            // Continue anyway - browser will use default drag image
-        }
-        
-        // Show all drop zones
-        showDropZones();
+        // Don't set drag image - use browser default for better compatibility
+                
+        // Show all drop zones with slight delay to ensure event processed
+        setTimeout(() => {
+            showDropZones();
+        }, 10);
         
         // Prevent event handling on parent elements
         e.stopPropagation();
@@ -304,26 +288,20 @@ function handleDragEnd(e) {
 
 // Setup draggable components
 function setupDraggableComponents() {
-    // Force get a fresh list of components every time
+    // SIMPLIFY: Get components and directly bind events instead of cloning
     const components = document.querySelectorAll('.component[draggable="true"]');
     
     console.log(`Setting up ${components.length} draggable components`);
     
-    // Completely remove all listeners on all components first
-    document.querySelectorAll('.component').forEach(comp => {
-        // Clone and replace each component to eliminate all listeners
-        const clone = comp.cloneNode(true);
-        if (comp.parentNode) {
-            comp.parentNode.replaceChild(clone, comp);
-        }
+    // First REMOVE any existing event listeners (to prevent duplicates)
+    components.forEach(component => {
+        component.removeEventListener('dragstart', handleDragStart);
+        component.removeEventListener('dragend', handleDragEnd);
     });
     
-    // Now get a fresh list after replacing the nodes
-    const freshComponents = document.querySelectorAll('.component[draggable="true"]');
-    
-    // Add event listeners to the fresh components
-    freshComponents.forEach(component => {
-        // Add new listeners to the cloned elements
+    // Now ADD the event listeners fresh
+    components.forEach(component => {
+        // Add drag event listeners
         component.addEventListener('dragstart', handleDragStart);
         component.addEventListener('dragend', handleDragEnd);
         
@@ -335,7 +313,7 @@ function setupDraggableComponents() {
     });
     
     // If no draggable components were found, log a message
-    if (freshComponents.length === 0) {
+    if (components.length === 0) {
         console.warn("No draggable components found! Check HTML structure and draggable attributes.");
     }
 }
@@ -396,66 +374,60 @@ function showDropZones() {
     }
 }
 
-// Create a drop zone at a specific position
+// Create a drop zone at a specific position - SIMPLIFIED VERSION
 function createDropZone(position, isValid) {
+    // Create a simpler drop zone element
     const dropZone = document.createElement('div');
-    dropZone.className = `absolute rack-position drop-zone ${isValid ? 'valid-drop' : 'invalid-drop'}`;
+    
+    // Basic positioning and styling
+    dropZone.className = 'absolute drop-zone';
+    if (isValid) {
+        dropZone.className += ' bg-green-100 bg-opacity-40 border-2 border-dashed border-green-500 cursor-pointer';
+    } else {
+        dropZone.className += ' bg-red-100 bg-opacity-40 border-2 border-dashed border-red-500';
+    }
+    
+    // Set position and dimensions
     dropZone.style.top = `${(position - 1) * 40}px`;
     dropZone.style.height = `${componentHeight * 40}px`;
     dropZone.style.left = '30px';
     dropZone.style.right = '0';
-    dropZone.dataset.position = position;
-    dropZone.style.zIndex = '20'; // Higher z-index to ensure it's clickable
+    dropZone.style.zIndex = '20';
     
-    // Add visual indicator - make empty slots more visible
-    const indicator = document.createElement('div');
+    // Critical data attributes
+    dropZone.setAttribute('data-position', position);
     
+    // SIMPLIFIED indicator text - just basic message
     if (isValid) {
-        // Valid drop zone - empty slot
-        indicator.className = 'absolute inset-0 border-2 border-dashed rounded-md border-green-500 bg-green-100 bg-opacity-30';
-        
-        // Add a drop label for empty slots
-        const label = document.createElement('div');
-        label.className = 'flex items-center justify-center h-full';
-        label.innerHTML = `
-            <div class="text-green-800 dark:text-green-200 font-medium text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-                <div>Drop Here</div>
+        dropZone.innerHTML = `
+            <div class="flex items-center justify-center h-full">
+                <div class="font-bold text-green-800">Drop Here</div>
             </div>
         `;
-        indicator.appendChild(label);
-    } else {
-        // Invalid drop zone
-        indicator.className = 'absolute inset-0 border-2 border-dashed rounded-md border-red-500 bg-red-100 bg-opacity-30';
         
-        // For invalid zones, show why they can't drop
-        const label = document.createElement('div');
-        label.className = 'flex items-center justify-center h-full';
-        label.innerHTML = `
-            <div class="text-red-800 dark:text-red-200 text-xs text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>Can't place here</div>
-            </div>
-        `;
-        indicator.appendChild(label);
-    }
-    
-    dropZone.appendChild(indicator);
-    
-    // Setup drop event handling
-    if (isValid) {
-        dropZone.addEventListener('dragover', handleDragOver);
-        dropZone.addEventListener('dragleave', handleDragLeave);
+        // Only add event listeners to valid drop zones
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('bg-blue-200');
+        });
+        
+        dropZone.addEventListener('dragleave', function(e) {
+            this.classList.remove('bg-blue-200');
+        });
+        
         dropZone.addEventListener('drop', handleDrop);
+    } else {
+        dropZone.innerHTML = `
+            <div class="flex items-center justify-center h-full">
+                <div class="font-bold text-red-800">Cannot Place Here</div>
+            </div>
+        `;
     }
     
+    // Add to the rack visualization
     rackVisualization.appendChild(dropZone);
     
-    // Debug log
     console.log(`Created ${isValid ? 'valid' : 'invalid'} drop zone at position ${position}`);
 }
 
@@ -519,6 +491,7 @@ function handleDragLeave(e) {
 
 // Handle drop event
 function handleDrop(e) {
+    console.log("Drop event occurred", e);
     e.preventDefault();
     e.stopPropagation(); // Prevent event bubbling
     
@@ -526,6 +499,10 @@ function handleDrop(e) {
         console.error('No dragged component found when drop occurred');
         return;
     }
+    
+    // IMPROVED LOGGING: Show what we're dealing with
+    console.log("Drop target:", this);
+    console.log("Drop zone dataset:", this.dataset);
     
     const newPosition = parseInt(this.dataset.position);
     const componentId = draggedComponent.dataset.componentId;
@@ -556,6 +533,9 @@ function handleDrop(e) {
     
     // Add visual feedback before the AJAX call
     savedComponent.classList.add('opacity-50');
+    
+    // SIMPLIFY: Add a clear logging message to show we're about to update
+    console.log(`⭐ UPDATING component ${componentData.id} from position ${componentData.oldPosition} to ${componentData.newPosition}`);
     
     // Update component position through AJAX call
     updateComponentPosition(componentData.id, componentData.newPosition);
@@ -620,16 +600,10 @@ function hideDropZones() {
     }
 }
 
-// Update component position via Turbo Streams
+// Update component position via Turbo Streams - SIMPLIFIED
 function updateComponentPosition(componentId, newPosition) {
     // Disable drag/drop during update operation
     dragDropEnabled = false;
-    
-    // Find the rack visualization and fade it out slightly for smoother transition
-    const rackViz = document.getElementById('server-rack-vizualization');
-    if (rackViz) {
-        rackViz.style.opacity = '0.7';
-    }
     
     // Show loading overlay with a message about what we're doing
     showLoadingOverlay('Moving component to position ' + newPosition + '...');
@@ -639,6 +613,19 @@ function updateComponentPosition(componentId, newPosition) {
     // Reset state to avoid any lingering references
     draggedComponent = null;
     originalPosition = null;
+    
+    // Get rack ID from the data attribute (more reliable than parsing URL)
+    const rackElement = document.querySelector('[data-rack-id]');
+    if (rackElement) {
+        rackId = rackElement.dataset.rackId;
+        console.log(`Using rack ID from data attribute: ${rackId}`);
+    }
+    
+    // Get CSRF token
+    const csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMetaTag) {
+        csrfToken = csrfMetaTag.content;
+    }
     
     // Make sure we have the rack ID
     if (!rackId) {
@@ -658,7 +645,13 @@ function updateComponentPosition(componentId, newPosition) {
         return;
     }
     
-    // Send AJAX request with Turbo Stream format
+    // DEBUG LOG ALL THE VALUES TO MAKE SURE THEY'RE CORRECT
+    console.log("AJAX Request details:");
+    console.log("- URL:", `/racks/${rackId}/rack_components/${componentId}`);
+    console.log("- CSRF token:", csrfToken);
+    console.log("- New position:", newPosition);
+    
+    // Send AJAX request with Turbo Stream format - CORRECT URL PATH FROM ROUTES
     fetch(`/racks/${rackId}/rack_components/${componentId}`, {
         method: 'PATCH',
         headers: {
@@ -1055,12 +1048,30 @@ function handleTrashDrop(e) {
     }
 }
 
-// Delete component via AJAX
+// Delete component via AJAX - FIXED URL
 function deleteComponent(componentId) {
     // Show loading overlay
     showLoadingOverlay();
     
-    console.log(`Deleting component ${componentId}`);
+    // Get fresh rack ID and CSRF token
+    const rackElement = document.querySelector('[data-rack-id]');
+    if (rackElement) {
+        rackId = rackElement.dataset.rackId;
+    }
+    
+    const csrfMetaTag = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMetaTag) {
+        csrfToken = csrfMetaTag.content;
+    }
+    
+    console.log(`Deleting component ${componentId} from rack ${rackId}`);
+    
+    // Check if we have the needed data
+    if (!rackId || !csrfToken) {
+        hideLoadingOverlay();
+        showErrorMessage("Missing required data. Please refresh the page and try again.");
+        return;
+    }
     
     // Send DELETE request
     fetch(`/racks/${rackId}/rack_components/${componentId}`, {

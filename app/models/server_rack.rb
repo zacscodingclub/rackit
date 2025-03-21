@@ -10,7 +10,6 @@ class ServerRack < ApplicationRecord
     message: "must be greater than 0"
   }
   validates :depth, presence: true, numericality: { 
-    only_integer: true, 
     greater_than: 0,
     message: "must be greater than 0" 
   }

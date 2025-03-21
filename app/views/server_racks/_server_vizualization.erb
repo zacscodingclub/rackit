@@ -1,11 +1,4 @@
 <div id="server-rack-vizualization" data-rack-id="<%= @server_rack.id %>">
-    <!-- Debug info -->
-    <div class="bg-gray-100 p-2 mb-2 text-xs">
-        <p>Current user ID: <%= Current.user&.id || 'nil' %> (class: <%= Current.user&.id.class %>)</p>
-        <p>Rack user ID: <%= @server_rack.user_id || 'nil' %> (class: <%= @server_rack.user_id.class %>)</p>
-        <p>Owner? <%= @is_owner ? 'Yes' : 'No' %></p>
-    </div>
-
     <div data-turbo-permanent>
         
         <div class="flex items-center justify-between mb-2">
