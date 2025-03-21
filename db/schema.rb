@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_20_231622) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_21_034119) do
   create_table "components", force: :cascade do |t|
     t.string "name"
     t.text "description"
@@ -19,6 +19,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_20_231622) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "color", default: "#4F46E5"
+    t.integer "user_id"
+    t.index ["user_id"], name: "index_components_on_user_id"
   end
 
   create_table "rack_components", force: :cascade do |t|
@@ -37,8 +39,30 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_20_231622) do
     t.float "depth"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["user_id"], name: "index_server_racks_on_user_id"
   end
 
+  create_table "sessions", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "ip_address"
+    t.string "user_agent"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email_address", null: false
+    t.string "password_digest", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email_address"], name: "index_users_on_email_address", unique: true
+  end
+
+  add_foreign_key "components", "users"
   add_foreign_key "rack_components", "components"
   add_foreign_key "rack_components", "server_racks"
+  add_foreign_key "server_racks", "users"
+  add_foreign_key "sessions", "users"
 end

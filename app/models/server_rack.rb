@@ -1,4 +1,5 @@
 class ServerRack < ApplicationRecord
+  belongs_to :user, optional: true
   has_many :rack_components, dependent: :destroy
   has_many :components, through: :rack_components
   

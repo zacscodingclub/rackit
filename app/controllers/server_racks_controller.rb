@@ -1,9 +1,14 @@
 class ServerRacksController < ApplicationController
+  allow_unauthenticated_access only: %i[ index show ]
   before_action :set_server_rack, only: %i[ show edit update destroy check_position ]
 
   # GET /server_racks or /server_racks.json
   def index
-    @server_racks = ServerRack.all
+    @server_racks = if Current.user
+      Current.user.server_racks
+    else
+      ServerRack.where(user_id: nil)
+    end
   end
 
   # GET /server_racks/1 or /server_racks/1.json
@@ -22,6 +27,7 @@ class ServerRacksController < ApplicationController
   # POST /server_racks or /server_racks.json
   def create
     @server_rack = ServerRack.new(server_rack_params)
+    @server_rack.user = Current.user if Current.user
 
     respond_to do |format|
       if @server_rack.save
@@ -86,7 +92,14 @@ class ServerRacksController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_server_rack
-      @server_rack = ServerRack.find(params[:id])
+      @server_rack = if Current.user
+        Current.user.server_racks.find_by(id: params[:id]) || ServerRack.where(user_id: nil).find_by(id: params[:id])
+      else
+        ServerRack.where(user_id: nil).find_by(id: params[:id])
+      end
+      
+      # Handle case where rack not found or doesn't belong to user
+      redirect_to server_racks_path, alert: "Server rack not found." and return unless @server_rack
       
       # Load the components for this rack through the rack_components association
       @rack_components = @server_rack.rack_components.includes(:component).order(:position_y)

@@ -1,8 +1,13 @@
 class ComponentsController < ApplicationController
+  allow_unauthenticated_access only: %i[ index show ]
   before_action :set_component, only: [:show, :edit, :update, :destroy]
 
   def index
-    @components = Component.all
+    @components = if Current.user
+      Current.user.components
+    else
+      Component.where(user_id: nil)
+    end
   end
 
   def show
@@ -14,6 +19,7 @@ class ComponentsController < ApplicationController
 
   def create
     @component = Component.new(component_params)
+    @component.user = Current.user if Current.user
 
     if @component.save
       redirect_to @component, notice: 'Component was successfully created.'
@@ -40,7 +46,14 @@ class ComponentsController < ApplicationController
 
   private
     def set_component
-      @component = Component.find(params[:id])
+      @component = if Current.user
+        Current.user.components.find_by(id: params[:id]) || Component.where(user_id: nil).find_by(id: params[:id])
+      else
+        Component.where(user_id: nil).find_by(id: params[:id])
+      end
+      
+      # Handle case where component not found or doesn't belong to user
+      redirect_to components_path, alert: "Component not found." and return unless @component
     end
 
     def component_params

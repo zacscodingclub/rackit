@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resource :session
+  resources :passwords, param: :token
   resources :components
   resources :server_racks, path: 'racks' do
     member do
