@@ -1,4 +1,5 @@
 class RackComponentsController < ApplicationController
+  before_action :set_current_user # Try to set Current.user for all actions
   before_action :set_server_rack
   before_action :set_rack_component, only: [:update, :destroy]
 
@@ -70,6 +71,22 @@ class RackComponentsController < ApplicationController
   private
     def set_server_rack
       @server_rack = ServerRack.find(params[:server_rack_id])
+      
+      # Set the ownership variable for use in views
+      @is_owner = Current.user && Current.user.id == @server_rack.user_id
+      
+      # Ensure only the rack owner can modify components
+      if ['create', 'update', 'destroy'].include?(action_name) && !@is_owner
+        respond_to do |format|
+          format.html { redirect_to server_racks_path, alert: "You can only modify your own server racks." and return }
+          format.json { render json: { error: "Unauthorized" }, status: :forbidden and return }
+          format.turbo_stream { 
+            render turbo_stream: turbo_stream.update("notifications", 
+              partial: "shared/error", 
+              locals: { error: "Unauthorized: You can only modify your own server racks" }) and return
+          }
+        end
+      end
     end
 
     def set_rack_component
@@ -103,5 +120,11 @@ class RackComponentsController < ApplicationController
       else
         params.permit(:position_y, :component_id)
       end
+    end
+    
+    def set_current_user
+      # Use the existing session resumption mechanism to try to set Current.user
+      # This is called even for actions that skip require_authentication
+      Current.session ||= find_session_by_cookie
     end
 end

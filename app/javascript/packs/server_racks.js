@@ -1,14 +1,37 @@
-document.addEventListener('DOMContentLoaded', initializeRackDragDrop);
+// Function to ensure we run the initialization once the DOM is ready
+function ensureDragDropInitialized() {
+    console.log("Ensuring drag and drop is initialized...");
+    
+    // Wait just a moment to ensure the DOM is settled - solves race conditions
+    setTimeout(function() {
+        // Start fresh every time
+        resetDragDropState();
+        initializeRackDragDrop();
+    }, 100);
+}
+
+// Add event listeners for all possible Turbo and DOM events
+document.addEventListener('DOMContentLoaded', ensureDragDropInitialized);
+document.addEventListener('turbo:load', ensureDragDropInitialized);
+document.addEventListener('turbo:frame-load', ensureDragDropInitialized);
+document.addEventListener('turbo:render', ensureDragDropInitialized);
+
+// Run immediately as well, for good measure
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    ensureDragDropInitialized();
+}
 
 // Make these variables global to the module scope
-let rackVisualization;
-let rackId;
-let csrfToken;
+let rackVisualization = null;
+let rackId = null;
+let csrfToken = null;
 let draggedComponent = null;
 let originalPosition = null;
 let componentHeight = 0;
 let rackPositions = [];
 let currentDropTargetPosition = null;
+let isInitialized = false;
+let dragDropEnabled = true; // Use this to prevent operations during updates
 
 // Listen for the custom component-position-updated event
 document.addEventListener('component-position-updated', handleComponentPositionUpdate);
@@ -63,27 +86,68 @@ function initializeRackDragDrop() {
         return; // Exit if we're not on a page with the visualization
     }
     
-    // Get necessary data
-    rackId = window.location.pathname.split('/').filter(Boolean).pop(); // Get rack ID from URL
-    csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
-    // Reset state
-    draggedComponent = null;
-    originalPosition = null;
-    currentDropTargetPosition = null;
-    
-    // Initialize the rack positions
-    initRackPositions();
-    
-    // Setup draggable components
-    setupDraggableComponents();
-    
-    console.log("Rack drag and drop initialization complete");
+    try {
+        // Get rack ID from data attribute first (more reliable)
+        const rackElement = document.querySelector('[data-rack-id]');
+        if (rackElement) {
+            rackId = rackElement.dataset.rackId;
+            console.log(`Rack ID from data attribute: ${rackId}`);
+        } else {
+            // Fallback to URL if data attribute not available
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            if (pathParts.length >= 2 && pathParts[0] === 'racks') {
+                rackId = pathParts[1];
+                console.log(`Rack ID from URL: ${rackId}`);
+            } else {
+                console.warn("Could not determine rack ID from data attribute or URL");
+                return; // Exit if we can't find a rack ID
+            }
+        }
+        
+        // Get CSRF token
+        const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+        if (csrfTokenElement) {
+            csrfToken = csrfTokenElement.getAttribute('content');
+        } else {
+            console.error("CSRF token not found");
+            return; // Exit if no CSRF token is found
+        }
+        
+        // Reset state
+        draggedComponent = null;
+        originalPosition = null;
+        currentDropTargetPosition = null;
+        
+        // Remove any existing drop zones to clean up
+        document.querySelectorAll('.drop-zone').forEach(zone => zone.remove());
+        
+        // Initialize the rack positions
+        initRackPositions();
+        
+        // Setup draggable components
+        setupDraggableComponents();
+        
+        // Mark as initialized
+        isInitialized = true;
+        
+        console.log("Rack drag and drop initialization complete");
+    } catch (error) {
+        console.error("Error initializing rack drag and drop:", error);
+    }
 }
     
     // Initialize rack positions array with all available U positions
 function initRackPositions() {
+    console.log("Initializing rack positions");
+    
+    if (!rackVisualization) {
+        console.error("Rack visualization element not found");
+        return;
+    }
+    
     const rackHeight = parseInt(rackVisualization.style.height) / 40;
+    console.log(`Rack height: ${rackHeight} units`);
+    
     rackPositions = [];
     
     // Create an array of all rack positions
@@ -97,16 +161,22 @@ function initRackPositions() {
     }
     
     // Mark occupied positions
-    document.querySelectorAll('.component').forEach(comp => {
+    const components = document.querySelectorAll('.component');
+    console.log(`Found ${components.length} components to process`);
+    
+    components.forEach(comp => {
         const position = parseInt(comp.dataset.position);
         const height = parseInt(comp.dataset.componentHeight);
+        const compId = comp.dataset.componentId;
+        
+        console.log(`Component ${compId} at position ${position} with height ${height}`);
         
         // Mark all positions this component occupies
         for (let i = position; i < position + height; i++) {
             const index = i - 1; // Convert to 0-based index
             if (index < rackPositions.length) {
                 rackPositions[index].occupied = true;
-                rackPositions[index].componentId = comp.dataset.componentId;
+                rackPositions[index].componentId = compId;
             }
         }
     });
@@ -114,52 +184,160 @@ function initRackPositions() {
 
 // Handle drag start event
 function handleDragStart(e) {
+    // Stop if drag/drop is disabled during updates
+    if (!dragDropEnabled) {
+        console.warn("Drag operation prevented - system is currently updating");
+        e.preventDefault();
+        return false;
+    }
+    
+    console.log("Drag start event triggered on component", this.dataset.componentId);
+    console.log("Component details:", {
+        id: this.dataset.componentId,
+        name: this.dataset.componentName,
+        height: this.dataset.componentHeight,
+        position: this.dataset.position,
+        draggable: this.draggable,
+        hasAttribute: this.hasAttribute('draggable')
+    });
+    
+    // Set global state
     draggedComponent = this;
-    componentHeight = parseInt(this.dataset.componentHeight);
-    originalPosition = parseInt(this.dataset.position);
+    componentHeight = parseInt(this.dataset.componentHeight) || 1;
+    originalPosition = parseInt(this.dataset.position) || 1;
+    
+    // Log the drag operation
+    console.log(`Starting drag of component ${this.dataset.componentId} (${this.dataset.componentName}) from position ${originalPosition}`);
     
     // Add visual cue for dragging
-    setTimeout(() => {
-        this.classList.add('opacity-50');
-    }, 0);
+    this.classList.add('opacity-50');
     
-    // Store component data in dataTransfer
-    e.dataTransfer.setData('application/json', JSON.stringify({
-        componentId: this.dataset.componentId,
-        height: componentHeight,
-        position: originalPosition
-    }));
-    
-    // Set allowed drag effect
-    e.dataTransfer.effectAllowed = 'move';
-    
-    // Show all drop zones
-    showDropZones();
+    try {
+        // Store component data in dataTransfer
+        const data = {
+            componentId: this.dataset.componentId,
+            height: componentHeight,
+            position: originalPosition,
+            name: this.dataset.componentName || ''
+        };
+        
+        // Set multiple formats for better browser compatibility
+        e.dataTransfer.setData('text/plain', `Component:${data.componentId}:${data.position}`);
+        
+        try {
+            // Try to set JSON data - this can fail in some browsers
+            e.dataTransfer.setData('application/json', JSON.stringify(data));
+        } catch (jsonError) {
+            console.warn("Could not set JSON data format:", jsonError);
+            // Continue anyway - we have the text format as backup
+        }
+        
+        // Set allowed drag effect
+        e.dataTransfer.effectAllowed = 'move';
+        
+        // Set a drag image to improve visual feedback
+        // Use the component itself as the drag image
+        try {
+            // Calculate center point for drag image
+            const rect = this.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            e.dataTransfer.setDragImage(this, centerX, centerY);
+        } catch (imgError) {
+            console.warn("Could not set drag image:", imgError);
+            // Continue anyway - browser will use default drag image
+        }
+        
+        // Show all drop zones
+        showDropZones();
+        
+        // Prevent event handling on parent elements
+        e.stopPropagation();
+        
+        return true;
+    } catch (error) {
+        console.error("Error in drag start handler:", error);
+        
+        // Attempt recovery by resetting state
+        draggedComponent = null;
+        hideDropZones();
+        this.classList.remove('opacity-50');
+        
+        // Show error message
+        showErrorMessage("Drag operation failed to initialize");
+        
+        return false;
+    }
 }
 
 // Handle drag end event
-function handleDragEnd() {
+function handleDragEnd(e) {
+    console.log("Drag end event triggered on component", this.dataset.componentId);
+    
+    // Clear visual cue
     this.classList.remove('opacity-50');
+    
+    // Clean up the UI
     hideDropZones();
+    
+    // Reset global state
+    const wasDragging = draggedComponent !== null;
     draggedComponent = null;
     
     // Refresh positions after drag operation
     initRackPositions();
+    
+    // If the drag was cancelled without a drop, ensure UI is back to normal
+    if (wasDragging && currentDropTargetPosition === null) {
+        console.log("Drag was cancelled without drop, ensuring clean state");
+        
+        // Force complete rebuild of draggable elements
+        setTimeout(() => {
+            setupDraggableComponents();
+        }, 50);
+    }
+    
+    // Reset drop target position
+    currentDropTargetPosition = null;
 }
 
 // Setup draggable components
 function setupDraggableComponents() {
+    // Force get a fresh list of components every time
     const components = document.querySelectorAll('.component[draggable="true"]');
     
-    components.forEach(component => {
-        // Remove existing listeners to avoid duplicates
-        component.removeEventListener('dragstart', handleDragStart);
-        component.removeEventListener('dragend', handleDragEnd);
-        
-        // Add new listeners
+    console.log(`Setting up ${components.length} draggable components`);
+    
+    // Completely remove all listeners on all components first
+    document.querySelectorAll('.component').forEach(comp => {
+        // Clone and replace each component to eliminate all listeners
+        const clone = comp.cloneNode(true);
+        if (comp.parentNode) {
+            comp.parentNode.replaceChild(clone, comp);
+        }
+    });
+    
+    // Now get a fresh list after replacing the nodes
+    const freshComponents = document.querySelectorAll('.component[draggable="true"]');
+    
+    // Add event listeners to the fresh components
+    freshComponents.forEach(component => {
+        // Add new listeners to the cloned elements
         component.addEventListener('dragstart', handleDragStart);
         component.addEventListener('dragend', handleDragEnd);
+        
+        // Set cursor style to indicate draggability
+        component.style.cursor = 'grab';
+        
+        // Log setup for debugging
+        console.log(`Setup component: ${component.dataset.componentName || 'unnamed'} (ID: ${component.dataset.componentId}) at position ${component.dataset.position}`);
     });
+    
+    // If no draggable components were found, log a message
+    if (freshComponents.length === 0) {
+        console.warn("No draggable components found! Check HTML structure and draggable attributes.");
+    }
 }
 
 // Show drop zones during drag
@@ -350,16 +528,37 @@ function handleDrop(e) {
     }
     
     const newPosition = parseInt(this.dataset.position);
-    console.log(`Dropping at position ${newPosition}`);
+    const componentId = draggedComponent.dataset.componentId;
+    
+    console.log(`Dropping component ${componentId} at position ${newPosition} (from ${originalPosition})`);
     
     // Don't do anything if dropping back to the original position
     if (newPosition === originalPosition) {
         console.log('Same position, ignoring drop');
+        hideDropZones();
         return;
     }
     
+    // Store information about the component being moved
+    const componentData = {
+        id: componentId,
+        height: componentHeight,
+        oldPosition: originalPosition,
+        newPosition: newPosition
+    };
+    
+    // Hide all drop zones immediately to prevent multiple drops
+    hideDropZones();
+    
+    // Clear dragged component reference to prevent further drops
+    const savedComponent = draggedComponent;
+    draggedComponent = null;
+    
+    // Add visual feedback before the AJAX call
+    savedComponent.classList.add('opacity-50');
+    
     // Update component position through AJAX call
-    updateComponentPosition(draggedComponent.dataset.componentId, newPosition);
+    updateComponentPosition(componentData.id, componentData.newPosition);
 }
 
 // Check if a component can be placed at a given position
@@ -423,16 +622,41 @@ function hideDropZones() {
 
 // Update component position via Turbo Streams
 function updateComponentPosition(componentId, newPosition) {
+    // Disable drag/drop during update operation
+    dragDropEnabled = false;
+    
     // Find the rack visualization and fade it out slightly for smoother transition
     const rackViz = document.getElementById('server-rack-vizualization');
     if (rackViz) {
         rackViz.style.opacity = '0.7';
     }
     
-    // Show loading overlay
-    showLoadingOverlay();
+    // Show loading overlay with a message about what we're doing
+    showLoadingOverlay('Moving component to position ' + newPosition + '...');
     
     console.log(`Updating component ${componentId} to position ${newPosition}`);
+    
+    // Reset state to avoid any lingering references
+    draggedComponent = null;
+    originalPosition = null;
+    
+    // Make sure we have the rack ID
+    if (!rackId) {
+        console.error("Missing rack ID, can't update component");
+        hideLoadingOverlay();
+        showErrorMessage("Error: Could not determine the server rack ID");
+        dragDropEnabled = true; // Re-enable drag/drop
+        return;
+    }
+    
+    // Make sure we have the CSRF token
+    if (!csrfToken) {
+        console.error("Missing CSRF token, can't update component");
+        hideLoadingOverlay();
+        showErrorMessage("Error: Missing security token (CSRF)");
+        dragDropEnabled = true; // Re-enable drag/drop
+        return;
+    }
     
     // Send AJAX request with Turbo Stream format
     fetch(`/racks/${rackId}/rack_components/${componentId}`, {
@@ -440,7 +664,7 @@ function updateComponentPosition(componentId, newPosition) {
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken,
-            'Accept': 'text/vnd.turbo-stream.html, application/json'
+            'Accept': 'text/vnd.turbo-stream.html, text/html, application/json'
         },
         body: JSON.stringify({
             position_y: newPosition
@@ -448,22 +672,58 @@ function updateComponentPosition(componentId, newPosition) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Failed to update position');
+            // Get more detailed error info if available
+            if (response.headers.get('Content-Type')?.includes('application/json')) {
+                return response.json().then(data => {
+                    throw new Error(data.error || `Failed with status: ${response.status}`);
+                });
+            }
+            throw new Error(`Failed to update position (Status: ${response.status})`);
         }
         
-        return response.text();
+        // Check content type to determine how to handle the response
+        const contentType = response.headers.get('Content-Type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => {
+                return { type: 'json', data };
+            });
+        } else {
+            return response.text().then(text => {
+                return { type: 'html', data: text };
+            });
+        }
     })
-    .then(html => {
+    .then(result => {
+        if (result.type === 'json') {
+            // Handle JSON response
+            console.log('Received JSON response:', result.data);
+            // Reload the page as a fallback for JSON responses
+            showSuccessMessage('Component position updated');
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+            return;
+        }
+        
+        const html = result.data;
+        
         // Process Turbo Stream response manually to ensure it works
         if (html && html.includes('turbo-stream')) {
+            console.log('Processing Turbo Stream response');
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             const streams = doc.querySelectorAll('turbo-stream');
+            
+            if (streams.length === 0) {
+                console.warn('No turbo-stream elements found in response');
+            }
             
             streams.forEach(stream => {
                 const action = stream.getAttribute('action');
                 const target = stream.getAttribute('target');
                 const template = stream.querySelector('template');
+                
+                console.log(`Turbo Stream: ${action} -> ${target}`);
                 
                 if (action && target && template) {
                     const content = template.content.cloneNode(true);
@@ -471,6 +731,7 @@ function updateComponentPosition(componentId, newPosition) {
                     
                     if (targetElement) {
                         if (action === 'replace') {
+                            console.log(`Replacing content in #${target}`);
                             // Always update the content, but handle the visualization specially
                             targetElement.innerHTML = '';
                             targetElement.appendChild(content);
@@ -482,20 +743,48 @@ function updateComponentPosition(componentId, newPosition) {
                                 }, 50);
                             }
                         } else if (action === 'append') {
+                            console.log(`Appending content to #${target}`);
                             targetElement.appendChild(content);
                         } else if (action === 'prepend') {
+                            console.log(`Prepending content to #${target}`);
                             targetElement.prepend(content);
+                        } else if (action === 'remove') {
+                            console.log(`Removing #${target}`);
+                            targetElement.remove();
                         }
+                    } else {
+                        console.warn(`Target element #${target} not found in the DOM`);
                     }
+                } else {
+                    console.warn(`Invalid turbo-stream element: missing action, target, or template`);
                 }
             });
+            
+            // Ensure draggedComponent is null before re-initialization
+            draggedComponent = null;
+            originalPosition = null;
             
             // Register a custom event to observe Turbo Stream updates
             // This event will be fired after Turbo processes all streams
             document.dispatchEvent(new CustomEvent('turbo-stream-render-complete'));
+            
+            // Important: Reset all relevant state after turbo update
+            setTimeout(() => {
+                rackVisualization = document.getElementById('server-front');
+                
+                // Force complete re-setup of all drag-drop functionality
+                if (rackVisualization) {
+                    console.log("Force re-setup of all draggable components after Turbo Stream update");
+                    setupDraggableComponents();
+                }
+            }, 100);
         } else {
+            console.warn('Response does not contain turbo-stream elements, reloading page');
             // If not a turbo stream response, reload the page as fallback
-            window.location.reload();
+            showSuccessMessage('Component position updated');
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
             return;
         }
         
@@ -507,19 +796,56 @@ function updateComponentPosition(componentId, newPosition) {
             // This ensures all event listeners and state are properly reset
             initializeRackDragDrop();
             
+            // Explicitly force setupDraggableComponents again
+            setTimeout(() => {
+                setupDraggableComponents();
+            }, 200);
+            
             // Show a success message to the user
             showSuccessMessage('Component position updated successfully');
         }, 300);
     })
     .catch(error => {
+        console.error('Error updating component position:', error);
         hideLoadingOverlay();
+        
+        // Restore opacity if needed
+        if (rackViz) {
+            rackViz.style.opacity = '1';
+        }
+        
+        // Show error message to the user
         showErrorMessage(error.message || 'Failed to update position');
-        console.error('Error:', error);
+        
+        // Reset all state variables
+        draggedComponent = null;
+        originalPosition = null;
+        
+        // Reinitialize drag and drop to reset the UI state
+        setTimeout(() => {
+            initializeRackDragDrop();
+            
+            // Re-enable drag/drop operations
+            dragDropEnabled = true;
+            console.log("Re-enabled drag/drop operations after error recovery");
+        }, 300);
+    })
+    .finally(() => {
+        // Ensure drag/drop is re-enabled no matter what happened
+        setTimeout(() => {
+            if (!dragDropEnabled) {
+                dragDropEnabled = true;
+                console.log("Re-enabled drag/drop operations via finally handler");
+            }
+        }, 1000); // Give it extra time in case other processes are running
     });
 }
 
 // Show loading overlay
-function showLoadingOverlay() {
+function showLoadingOverlay(message = 'Updating component position...') {
+    // First, remove any existing overlay
+    hideLoadingOverlay();
+    
     const overlay = document.createElement('div');
     overlay.id = 'loading-overlay';
     overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
@@ -530,7 +856,7 @@ function showLoadingOverlay() {
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Updating component position...</span>
+                <span>${message}</span>
             </div>
         </div>
     `;
@@ -579,11 +905,102 @@ function showSuccessMessage(message) {
     }, 3000);
 }
 
-// Add a listener for Turbo navigation events to reinitialize on page changes
-document.addEventListener('turbo:load', initializeRackDragDrop);
+// Function to completely reset the drag and drop state
+function resetDragDropState() {
+    console.log("Completely resetting drag and drop state");
+    
+    // Reset all state variables
+    draggedComponent = null;
+    originalPosition = null;
+    componentHeight = 0;
+    currentDropTargetPosition = null;
+    
+    // Clean up the UI
+    hideDropZones();
+    
+    // Remove any drag-related classes from components
+    document.querySelectorAll('.component').forEach(comp => {
+        comp.classList.remove('opacity-50');
+    });
+    
+    // Get fresh references to rack visualization
+    rackVisualization = document.getElementById('server-front');
+    
+    if (rackVisualization) {
+        // Make sure all components are draggable for rack owner
+        document.querySelectorAll('.component[draggable="true"]').forEach(comp => {
+            // Clear any inline styles that might be interfering
+            comp.style.cursor = 'grab';
+        });
+    }
+}
 
-// Also listen for our custom event for after Turbo Stream updates
-document.addEventListener('turbo-stream-render-complete', initializeRackDragDrop);
+// Listen for Turbo Stream events that might contain server rack updates
+document.addEventListener('turbo:before-stream-render', (event) => {
+    if (event.target && event.target.action === "replace" && 
+        event.target.target === "server-rack-vizualization") {
+        console.log("Server rack visualization is being replaced");
+        // Clean up any existing drag/drop state before replacement
+        resetDragDropState();
+    }
+});
+
+// Listen for Turbo Stream update completion
+document.addEventListener('turbo:stream-render', (event) => {
+    console.log("Turbo Stream render event:", event);
+    
+    // Schedule initialization after Turbo Stream rendering completes
+    // Use setTimeout to ensure the DOM has been updated
+    setTimeout(() => {
+        if (event.target) {
+            if (event.target.target === "server-rack-vizualization") {
+                console.log("Server rack visualization was updated, reinitializing drag and drop");
+                resetDragDropState();
+                initializeRackDragDrop();
+                
+                // Double-check component setup after a small delay
+                setTimeout(() => {
+                    setupDraggableComponents();
+                }, 200);
+            } else if (event.target.target === "rack-components-list") {
+                console.log("Rack components list was updated");
+                // Refresh rack positions in case components changed
+                if (isInitialized && rackVisualization) {
+                    initRackPositions();
+                }
+            }
+        }
+    }, 100); // Small delay to ensure DOM updates are complete
+});
+
+// Also listen for our custom event for after manual Turbo Stream updates
+document.addEventListener('turbo-stream-render-complete', () => {
+    console.log("Custom turbo-stream-render-complete event received");
+    
+    // Completely reset everything
+    resetDragDropState();
+    
+    // Set a sequence of initialization steps with appropriate delays
+    setTimeout(() => {
+        // Step 1: Basic initialization
+        initializeRackDragDrop();
+        
+        // Step 2: Force setup components
+        setTimeout(() => {
+            setupDraggableComponents();
+            
+            // Step 3: Final cleanup and enable
+            setTimeout(() => {
+                // Re-enable drag/drop
+                dragDropEnabled = true;
+                console.log("Drag/drop re-enabled after turbo-stream-render-complete");
+                
+                // Force one last setup to ensure everything is ready
+                setupDraggableComponents();
+            }, 150);
+        }, 150);
+    }, 150);
+});
 
 // Trash bin event handlers
 function handleTrashDragOver(e) {

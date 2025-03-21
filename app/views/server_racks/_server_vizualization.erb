@@ -1,4 +1,11 @@
-<div id="server-rack-vizualization">
+<div id="server-rack-vizualization" data-rack-id="<%= @server_rack.id %>">
+    <!-- Debug info -->
+    <div class="bg-gray-100 p-2 mb-2 text-xs">
+        <p>Current user ID: <%= Current.user&.id || 'nil' %> (class: <%= Current.user&.id.class %>)</p>
+        <p>Rack user ID: <%= @server_rack.user_id || 'nil' %> (class: <%= @server_rack.user_id.class %>)</p>
+        <p>Owner? <%= @is_owner ? 'Yes' : 'No' %></p>
+    </div>
+
     <div data-turbo-permanent>
         
         <div class="flex items-center justify-between mb-2">
@@ -98,21 +105,24 @@
                              data-height="<%= rack_component.component.height %>">
                              
                             <!-- Component showing actual depth with custom colors -->
-                            <div class="component h-full rounded-md border flex items-center p-2 cursor-grab relative z-10"
+                            <div class="component h-full rounded-md border flex items-center p-2 <%= @is_owner ? 'cursor-grab' : 'cursor-default' %> relative z-10"
                                  style="width: <%= depth_width %>%; <%= custom_style %>"
                                  data-component-id="<%= rack_component.id %>"
                                  data-component-name="<%= rack_component.component.name %>"
                                  data-component-height="<%= rack_component.component.height %>"
                                  data-position="<%= rack_component.position_y %>"
                                  data-component-color="<%= component_color %>"
-                                 draggable="true">
+                                 <%= @is_owner ? 'draggable="true"'.html_safe : '' %>
+                                 <%= @is_owner ? 'data-draggable="true"'.html_safe : '' %>>
                                 
-                                <!-- Grab handle indicator on left side -->
+                                <!-- Grab handle indicator on left side (only for owner) -->
+                                <% if @is_owner %>
                                 <div class="flex-shrink-0 mr-2 text-black dark:text-white">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                                     </svg>
                                 </div>
+                                <% end %>
                                 
                                 <% if rack_component.component.height == 1 %>
                                     <!-- For 1U components, display everything on a single line -->
@@ -172,4 +182,4 @@
     </div>
 </div>
 
-<%= javascript_include_tag 'packs/server_racks' %>
+<%# JavaScript is included via importmap %>

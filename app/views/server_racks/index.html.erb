@@ -32,7 +32,18 @@
             <%= link_to server_rack, class: "block px-4 py-5 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700 transition-colors duration-150" do %>
               <div class="flex items-center">
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white"><%= server_rack.name %></h3>
+                  <div class="flex items-center">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white"><%= server_rack.name %></h3>
+                    <% if server_rack.user_id.present? && Current.user && server_rack.user_id == Current.user.id %>
+                      <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        Your Rack
+                      </span>
+                    <% elsif server_rack.user_id.present? %>
+                      <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                        Private
+                      </span>
+                    <% end %>
+                  </div>
                   <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
                     <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
                       <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

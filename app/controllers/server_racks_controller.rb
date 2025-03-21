@@ -1,20 +1,17 @@
 class ServerRacksController < ApplicationController
   allow_unauthenticated_access only: %i[ index show ]
+  before_action :set_current_user  # Try to set Current.user for all actions
   before_action :set_server_rack, only: %i[ show edit update destroy check_position ] # Not applied to new or create
 
   # GET /server_racks or /server_racks.json
   def index
-    @server_racks = if Current.user
-      # Show both user's racks and public racks
-      ServerRack.where("user_id = ? OR user_id IS NULL", Current.user.id)
-    else
-      # Only show public racks
-      ServerRack.where(user_id: nil)
-    end
+    # Show all server racks to all users
+    @server_racks = ServerRack.all
   end
 
   # GET /server_racks/1 or /server_racks/1.json
   def show
+    # Current.user is set by set_current_user if available
   end
 
   # GET /server_racks/new
@@ -94,27 +91,32 @@ class ServerRacksController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_server_rack
-      # Find rack that either belongs to current user or has no user
-      @server_rack = if Current.user
-        # Look for rack owned by current user OR with no user
-        ServerRack.where("id = ? AND (user_id = ? OR user_id IS NULL)", params[:id], Current.user.id).first
-      else
-        # If no current user, only show racks with no user
-        ServerRack.where(user_id: nil, id: params[:id]).first
-      end
+      # Find the server rack by ID (allow viewing any rack)
+      @server_rack = ServerRack.find_by(id: params[:id])
       
-      # Handle case where rack not found or doesn't belong to user
+      # Handle case where rack not found
       redirect_to server_racks_path, alert: "Server rack not found." and return unless @server_rack
+      
+      # Set the ownership variable for use in views
+      @is_owner = Current.user && Current.user.id == @server_rack.user_id
+      
+      # For edit/update/destroy actions, verify ownership
+      if ['edit', 'update', 'destroy'].include?(action_name) && !@is_owner
+        redirect_to server_racks_path, alert: "You can only edit your own server racks." and return 
+      end
       
       # Load the components for this rack through the rack_components association
       @rack_components = @server_rack.rack_components.includes(:component).order(:position_y)
-      
-      # Simply use the rack_components directly for visualization
-      # No need for a separate struct since we have our Component model
     end
 
     # Only allow a list of trusted parameters through.
     def server_rack_params
       params.require(:server_rack).permit(:name, :height, :depth)
+    end
+    
+    def set_current_user
+      # Use the existing session resumption mechanism to try to set Current.user
+      # This is called even for actions that skip require_authentication
+      Current.session ||= find_session_by_cookie
     end
 end
