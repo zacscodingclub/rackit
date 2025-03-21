@@ -1,6 +1,5 @@
 <div id="server-rack-vizualization">
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md" data-turbo-permanent>
-        <h3 class="text-xl font-semibold mb-2">Rack Visualization</h3>
+    <div data-turbo-permanent>
         
         <div class="flex items-center justify-between mb-2">
             <div class="text-sm">
@@ -50,7 +49,7 @@
             
             <div id="server-front" class="relative" style="height: <%= @server_rack.height * 40 + 20 %>px;">
                 <!-- Vertical grid lines for depth -->
-                <div class="absolute left-0 right-0 top-0 bottom-0 pointer-events-none" style="left: 30px;">
+                <div class="absolute top-0 bottom-0 pointer-events-none" style="left: 30px; right: 30px;">
                     <!-- 25% vertical line -->
                     <div class="absolute top-0 bottom-0 border-l border-dashed border-gray-300 dark:border-gray-700 z-0" style="left: 25%;"></div>
                     
@@ -147,7 +146,7 @@
                     </div>
                 <% end %>
                 
-                <!-- Rack unit markers -->
+                <!-- Left side rack unit markers -->
                 <% @server_rack.height.times do |i| %>
                     <div class="absolute left-0 bg-gray-200 dark:bg-gray-700 px-1 text-xs text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 flex items-center justify-center" 
                          style="top: <%= i * 40 %>px; height: 40px; width: 30px;">
@@ -155,10 +154,18 @@
                     </div>
                 <% end %>
                 
+                <!-- Right side rack unit markers -->
+                <% @server_rack.height.times do |i| %>
+                    <div class="absolute right-0 bg-gray-200 dark:bg-gray-700 px-1 text-xs text-gray-700 dark:text-gray-300 border-l border-gray-300 dark:border-gray-600 flex items-center justify-center" 
+                         style="top: <%= i * 40 %>px; height: 40px; width: 30px;">
+                        <%= i + 1 %>U
+                    </div>
+                <% end %>
+                
                 <!-- Rack background grid lines -->
                 <% @server_rack.height.times do |i| %>
-                    <div class="absolute left-0 right-0 border-t border-gray-300 dark:border-gray-700 z-0" 
-                         style="top: <%= i * 40 %>px; height: 1px; left: 30px;"></div>
+                    <div class="absolute border-t border-gray-300 dark:border-gray-700 z-0" 
+                         style="top: <%= i * 40 %>px; height: 1px; left: 30px; right: 30px;"></div>
                 <% end %>
             </div>
         </div>
