@@ -1,5 +1,5 @@
 <div id="server-rack-vizualization">
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md" data-turbo-permanent>
         <h3 class="text-xl font-semibold mb-2">Rack Visualization</h3>
         
         <div class="flex items-center mb-2">
@@ -21,8 +21,9 @@
             </div>
             
             <div id="server-front" class="relative" style="height: <%= @server_rack.height * 40 + 20 %>px;">
-                <% if @rack_components.any? %>
-                    <% @rack_components.each do |rack_component| %>
+                <% rack_components = @rack_components.presence || @server_rack.rack_components.includes(:component).order(:position_y) %>
+                <% if rack_components.any? %>
+                    <% rack_components.each do |rack_component| %>
                         <% 
                             # Use the component's color property if available, otherwise fallback to default
                             component_color = rack_component.component.color || "#4F46E5" # Default to indigo if no color
@@ -53,11 +54,20 @@
                             1. Outer wrapper spans the full rack width
                             2. Component div inside it shows only the actual component depth
                         -->
-                        <div class="absolute" style="top: <%= top %>px; height: <%= height %>px; left: 30px; right: 0;">
+                        <div class="absolute rack-position" 
+                             style="top: <%= top %>px; height: <%= height %>px; left: 30px; right: 0;"
+                             data-position="<%= rack_component.position_y %>"
+                             data-height="<%= rack_component.component.height %>">
+                             
                             <!-- Component showing actual depth with custom colors -->
-                            <div class="component h-full rounded-md border flex items-center p-2"
+                            <div class="component h-full rounded-md border flex items-center p-2 cursor-grab"
                                  style="width: <%= depth_width %>%; <%= custom_style %>"
-                                 data-component-color="<%= component_color %>">
+                                 data-component-id="<%= rack_component.id %>"
+                                 data-component-name="<%= rack_component.component.name %>"
+                                 data-component-height="<%= rack_component.component.height %>"
+                                 data-position="<%= rack_component.position_y %>"
+                                 data-component-color="<%= component_color %>"
+                                 draggable="true">
                                 
                                 <% if rack_component.component.height == 1 %>
                                     <!-- For 1U components, display everything on a single line -->
@@ -74,6 +84,17 @@
                                         </div>
                                     </div>
                                 <% end %>
+                                
+                                <!-- Grab handle indicator -->
+                                <div class="ml-auto text-gray-500 dark:text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <!-- Drop zone indicator shown during drag -->
+                            <div class="absolute inset-0 hidden drop-indicator border-2 border-dashed rounded-md border-blue-500 bg-blue-100 bg-opacity-30 dark:bg-blue-900 dark:bg-opacity-30">
                             </div>
                             
                             <!-- Dashed remainder line shows rest of rack width -->

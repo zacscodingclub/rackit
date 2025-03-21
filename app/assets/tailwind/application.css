@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 #server-rack-vizualization {
-    border: solid 1px #eee
-  }
+    border: solid 1px #eee;
+    transition: opacity 0.2s ease-in-out;
+}
   
 .component {
     @apply bg-gray-300 dark:bg-gray-700 text-black dark:text-white p-2 border border-gray-400 dark:border-gray-600 cursor-move;
@@ -10,4 +11,53 @@
 
 .empty {
     @apply bg-white dark:bg-gray-800 text-black dark:text-white p-2 border border-dashed border-gray-400 dark:border-gray-600 cursor-move;
+}
+
+/* Drop zone styling */
+.drop-zone {
+    @apply transition-all duration-200;
+    pointer-events: all !important;
+    z-index: 30 !important;
+}
+
+.valid-drop {
+    @apply cursor-pointer;
+}
+
+.invalid-drop {
+    @apply cursor-not-allowed;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* Transition utilities */
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.duration-500 {
+  transition-duration: 500ms;
+}
+
+.opacity-0 {
+  opacity: 0;
 }
