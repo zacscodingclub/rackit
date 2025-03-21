@@ -1,12 +1,14 @@
 class ServerRacksController < ApplicationController
   allow_unauthenticated_access only: %i[ index show ]
-  before_action :set_server_rack, only: %i[ show edit update destroy check_position ]
+  before_action :set_server_rack, only: %i[ show edit update destroy check_position ] # Not applied to new or create
 
   # GET /server_racks or /server_racks.json
   def index
     @server_racks = if Current.user
-      Current.user.server_racks
+      # Show both user's racks and public racks
+      ServerRack.where("user_id = ? OR user_id IS NULL", Current.user.id)
     else
+      # Only show public racks
       ServerRack.where(user_id: nil)
     end
   end
@@ -92,10 +94,13 @@ class ServerRacksController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_server_rack
+      # Find rack that either belongs to current user or has no user
       @server_rack = if Current.user
-        Current.user.server_racks.find_by(id: params[:id]) || ServerRack.where(user_id: nil).find_by(id: params[:id])
+        # Look for rack owned by current user OR with no user
+        ServerRack.where("id = ? AND (user_id = ? OR user_id IS NULL)", params[:id], Current.user.id).first
       else
-        ServerRack.where(user_id: nil).find_by(id: params[:id])
+        # If no current user, only show racks with no user
+        ServerRack.where(user_id: nil, id: params[:id]).first
       end
       
       # Handle case where rack not found or doesn't belong to user

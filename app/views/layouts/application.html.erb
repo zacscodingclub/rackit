@@ -32,7 +32,7 @@
         <button class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded">
           <%= link_to "Components", components_path %>
         </button>
-        <% if authenticated? %>
+        <% if authenticated? && Current.user %>
           <div class="flex items-center gap-4">
             <span class="text-sm text-gray-600 dark:text-gray-400">
               <%= Current.user.email_address %>

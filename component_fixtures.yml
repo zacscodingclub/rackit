@@ -1,0 +1,100 @@
+# Component fixtures for import
+component_1:
+  id: 1
+  name: UDM
+  description: Unifi Dream Machine
+  height: 1
+  depth: 12
+  color: "#0ccbb7"
+  brand: UniFi
+  user: one
+
+component_2:
+  id: 2
+  name: Standard 24 PoE
+  description: 24 port network switch with PoE
+  height: 1
+  depth: 12
+  color: "#4f46e5"
+  brand: Unifi
+  user: one
+
+component_3:
+  id: 3
+  name: RM44
+  description: SilverStone RM44 4U chassis GPU computer
+  height: 4
+  depth: 19
+  color: "#4f46e5"
+  brand: SilverStone
+  user: one
+
+component_4:
+  id: 4
+  name: CP1500PFCRM2U UPS
+  description: CyberPower CP1500PFCRM2U
+  height: 2
+  depth: 11
+  color: "#4f46e5"
+  brand: CyberPower
+  user: one
+
+component_5:
+  id: 5
+  name: 1U Blank
+  description: blank
+  height: 1
+  depth: 1
+  color: "#4F46E5"
+  brand: None
+  user: one
+
+component_6:
+  id: 6
+  name: 2U blank
+  description: 2U
+  height: 2
+  depth: 1
+  color: "#4F46E5"
+  brand: None
+  user: one
+
+component_7:
+  id: 7
+  name: 4U Blank
+  description: 4U Blank
+  height: 4
+  depth: 1
+  color: "#4F46E5"
+  brand: None
+  user: one
+
+component_8:
+  id: 8
+  name: Patch Panel
+  description: Networking patch panel
+  height: 1
+  depth: 6
+  color: "#4f46e5"
+  brand: None
+  user: one
+
+component_9:
+  id: 9
+  name: 1U Shelf
+  description: 10 inch shelf
+  height: 1
+  depth: 10
+  color: "#4f46e5"
+  brand: None
+  user: one
+
+component_10:
+  id: 10
+  name: 2U Drawer
+  description: 2U drawer
+  height: 2
+  depth: 16
+  color: "#4f46e5"
+  brand: StarTech
+  user: one

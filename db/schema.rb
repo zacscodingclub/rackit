@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_03_21_034119) do
+ActiveRecord::Schema[8.0].define(version: 2025_03_21_154703) do
   create_table "components", force: :cascade do |t|
     t.string "name"
     t.text "description"
@@ -20,6 +20,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_21_034119) do
     t.datetime "updated_at", null: false
     t.string "color", default: "#4F46E5"
     t.integer "user_id"
+    t.string "brand"
     t.index ["user_id"], name: "index_components_on_user_id"
   end
 

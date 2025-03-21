@@ -3,6 +3,8 @@ require "test_helper"
 class ServerRacksControllerTest < ActionDispatch::IntegrationTest
   setup do
     @server_rack = server_racks(:one)
+    @user = users(:one)
+    sign_in_as(@user)
   end
 
   test "should get index" do
@@ -17,7 +19,7 @@ class ServerRacksControllerTest < ActionDispatch::IntegrationTest
 
   test "should create server_rack" do
     assert_difference("ServerRack.count") do
-      post server_racks_url, params: { server_rack: { depth: @server_rack.depth, height: @server_rack.height, name: @server_rack.name } }
+      post server_racks_url, params: { server_rack: { depth: @server_rack.depth, height: @server_rack.height, name: "New Test Rack" } }
     end
 
     assert_redirected_to server_rack_url(ServerRack.last)

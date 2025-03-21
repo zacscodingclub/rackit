@@ -3,11 +3,15 @@
 one:
   name: MyString
   description: MyText
+  brand: MyBrand
   height: 1
   depth: 1
+  user: one
 
 two:
   name: MyString
   description: MyText
+  brand: AnotherBrand
   height: 1
   depth: 1
+  user: one

@@ -1,23 +1,30 @@
 require "test_helper"
 
 class ComponentsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @component = components(:one)
+  end
+
   test "should get index" do
-    get components_index_url
+    get components_url
     assert_response :success
   end
 
   test "should get show" do
-    get components_show_url
+    # The component belongs to users(:one), we're already signed in as users(:one)
+    get component_url(@component)
     assert_response :success
   end
 
   test "should get new" do
-    get components_new_url
+    sign_in_as users(:one)
+    get new_component_url
     assert_response :success
   end
 
   test "should get edit" do
-    get components_edit_url
+    sign_in_as users(:one)
+    get edit_component_url(@component)
     assert_response :success
   end
 end

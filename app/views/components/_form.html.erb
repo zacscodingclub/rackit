@@ -17,6 +17,11 @@
   </div>
 
   <div class="mb-4">
+    <%= form.label :brand, class: "block text-gray-700 dark:text-gray-300 font-bold mb-2" %>
+    <%= form.text_field :brand, class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-800 leading-tight focus:outline-none focus:shadow-outline" %>
+  </div>
+
+  <div class="mb-4">
     <%= form.label :description, class: "block text-gray-700 dark:text-gray-300 font-bold mb-2" %>
     <%= form.text_area :description, rows: 4, class: "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-800 leading-tight focus:outline-none focus:shadow-outline" %>
   </div>
