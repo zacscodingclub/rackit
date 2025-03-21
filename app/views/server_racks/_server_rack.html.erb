@@ -1,13 +1,27 @@
-<div id="<%= dom_id server_rack %>" class="w-full sm:w-auto my-5 space-y-5">
-  <div>
-    <strong class="block font-medium mb-1">Name:</strong>
-    <strong><%= server_rack.name %></strong>
-  </div>
-  <div>
-    <strong class="block font-medium mb-1">Height:</strong>
-    <%= server_rack.height %>U
-  <div>
-    <strong class="block font-medium mb-1">Depth:</strong>
-    <%= server_rack.depth %>
+<div id="<%= dom_id server_rack %>" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2"><%= server_rack.name %></h2>
+      <div class="flex flex-wrap gap-4">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          </svg>
+          <span class="text-gray-700 dark:text-gray-300"><%= server_rack.height %> U</span>
+        </div>
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+          </svg>
+          <span class="text-gray-700 dark:text-gray-300"><%= server_rack.depth %> inches depth</span>
+        </div>
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+          </svg>
+          <span class="text-gray-700 dark:text-gray-300"><%= server_rack.rack_components.count %> components</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

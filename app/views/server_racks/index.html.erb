@@ -1,15 +1,85 @@
-<div id="server_racks" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 space-y-5">
-  <% if @server_racks.any? %>
-    <% @server_racks.each do |server_rack| %>
-      <div class="flex flex-col sm:flex-row justify-between items-center pb-5 sm:pb-0">
-        <%= render server_rack %>
-        <div class="w-full sm:w-auto flex flex-col sm:flex-row space-x-2 space-y-2">
-          <%= link_to "Show", server_rack, class: "w-full sm:w-auto text-center rounded-md px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-white inline-block font-medium" %>
-          <%= link_to "Edit", edit_server_rack_path(server_rack), class: "w-full sm:w-auto text-center rounded-md px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white dark:bg-yellow-800 dark:hover:bg-yellow-700 dark:text-white inline-block font-medium" %>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Server Racks</h1>
+    <%= link_to new_server_rack_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+      New Server Rack
+    <% end %>
+  </div>
+
+  <% if notice.present? %>
+    <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-md">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-green-700"><%= notice %></p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
+    <% if @server_racks.any? %>
+      <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+        <% @server_racks.each do |server_rack| %>
+          <li>
+            <%= link_to server_rack, class: "block px-4 py-5 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700 transition-colors duration-150" do %>
+              <div class="flex items-center">
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white"><%= server_rack.name %></h3>
+                  <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
+                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                      <%= server_rack.height %>U
+                    </div>
+                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                      </svg>
+                      <%= server_rack.depth %> inches depth
+                    </div>
+                    <div class="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                      </svg>
+                      <%= server_rack.rack_components.count %> components
+                    </div>
+                  </div>
+                </div>
+                <div class="ml-5 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">No server racks yet</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating a new server rack.</p>
+        <div class="mt-6">
+          <%= link_to new_server_rack_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Create Server Rack
+          <% end %>
         </div>
       </div>
     <% end %>
-  <% else %>
-    <p class="text-center my-10 text-black dark:text-white">No server racks found.</p>
-  <% end %>s
+  </div>
 </div>

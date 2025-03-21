@@ -24,11 +24,42 @@
                 <div class="text-xs text-gray-500 ml-8">0"</div>
                 <div class="flex-1 relative">
                     <div class="h-1 bg-gray-300 dark:bg-gray-700 absolute left-0 right-0 top-3"></div>
+                    
+                    <!-- 25% marker -->
+                    <div class="absolute text-xs text-gray-500" style="left: 25%; transform: translateX(-50%);">
+                        <%= (@server_rack.depth * 0.25).round %>"
+                    </div>
+                    <div class="absolute h-2 w-0.5 bg-gray-300 dark:bg-gray-700" style="left: 25%; transform: translateX(-50%); top: 3px;"></div>
+                    
+                    <!-- 50% marker -->
+                    <div class="absolute text-xs text-gray-500" style="left: 50%; transform: translateX(-50%);">
+                        <%= (@server_rack.depth * 0.5).round %>"
+                    </div>
+                    <div class="absolute h-2.5 w-0.5 bg-gray-300 dark:bg-gray-700" style="left: 50%; transform: translateX(-50%); top: 2.5px;"></div>
+                    
+                    <!-- 75% marker -->
+                    <div class="absolute text-xs text-gray-500" style="left: 75%; transform: translateX(-50%);">
+                        <%= (@server_rack.depth * 0.75).round %>"
+                    </div>
+                    <div class="absolute h-2 w-0.5 bg-gray-300 dark:bg-gray-700" style="left: 75%; transform: translateX(-50%); top: 3px;"></div>
+                    
+                    <!-- 100% marker -->
                     <div class="absolute right-0 text-xs text-gray-500"><%= @server_rack.depth %>"</div>
                 </div>
             </div>
             
             <div id="server-front" class="relative" style="height: <%= @server_rack.height * 40 + 20 %>px;">
+                <!-- Vertical grid lines for depth -->
+                <div class="absolute left-0 right-0 top-0 bottom-0 pointer-events-none" style="left: 30px;">
+                    <!-- 25% vertical line -->
+                    <div class="absolute top-0 bottom-0 border-l border-dashed border-gray-300 dark:border-gray-700 z-0" style="left: 25%;"></div>
+                    
+                    <!-- 50% vertical line -->
+                    <div class="absolute top-0 bottom-0 border-l border-dashed border-gray-300 dark:border-gray-700 z-0" style="left: 50%;"></div>
+                    
+                    <!-- 75% vertical line -->
+                    <div class="absolute top-0 bottom-0 border-l border-dashed border-gray-300 dark:border-gray-700 z-0" style="left: 75%;"></div>
+                </div>
                 <% rack_components = @rack_components.presence || @server_rack.rack_components.includes(:component).order(:position_y) %>
                 <% if rack_components.any? %>
                     <% rack_components.each do |rack_component| %>
@@ -68,7 +99,7 @@
                              data-height="<%= rack_component.component.height %>">
                              
                             <!-- Component showing actual depth with custom colors -->
-                            <div class="component h-full rounded-md border flex items-center p-2 cursor-grab"
+                            <div class="component h-full rounded-md border flex items-center p-2 cursor-grab relative z-10"
                                  style="width: <%= depth_width %>%; <%= custom_style %>"
                                  data-component-id="<%= rack_component.id %>"
                                  data-component-name="<%= rack_component.component.name %>"
@@ -77,28 +108,28 @@
                                  data-component-color="<%= component_color %>"
                                  draggable="true">
                                 
-                                <% if rack_component.component.height == 1 %>
-                                    <!-- For 1U components, display everything on a single line -->
-                                    <div class="text-sm whitespace-nowrap overflow-hidden text-ellipsis">
-                                        <span class="font-bold"><%= rack_component.component.name %></span>
-                                        <span class="text-xs ml-1">(<%= rack_component.component.height %>U • <%= rack_component.component.depth %>")</span>
-                                    </div>
-                                <% else %>
-                                    <!-- For taller components -->
-                                    <div>
-                                        <div class="font-bold"><%= rack_component.component.name %></div>
-                                        <div class="text-xs">
-                                            <%= rack_component.component.height %>U • <%= rack_component.component.depth %>"
-                                        </div>
-                                    </div>
-                                <% end %>
-                                
-                                <!-- Grab handle indicator -->
-                                <div class="ml-auto text-gray-500 dark:text-gray-400">
+                                <!-- Grab handle indicator on left side -->
+                                <div class="flex-shrink-0 mr-2 text-black dark:text-white">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                                     </svg>
                                 </div>
+                                
+                                <% if rack_component.component.height == 1 %>
+                                    <!-- For 1U components, display everything on a single line -->
+                                    <div class="text-sm whitespace-nowrap overflow-hidden text-ellipsis flex-grow">
+                                        <span class="font-bold px-1.5 py-0.5 bg-gray-900 text-white dark:bg-white dark:text-gray-900 rounded shadow-sm"><%= rack_component.component.name %></span>
+                                        <span class="text-xs ml-1 px-1.5 py-0.5 bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900 rounded shadow-sm">(<%= rack_component.component.height %>U • <%= rack_component.component.depth %>")</span>
+                                    </div>
+                                <% else %>
+                                    <!-- For taller components -->
+                                    <div class="flex-grow">
+                                        <div class="font-bold px-2 py-1 bg-gray-900 text-white dark:bg-white dark:text-gray-900 rounded shadow-sm inline-block"><%= rack_component.component.name %></div>
+                                        <div class="text-xs px-2 py-1 bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900 rounded shadow-sm inline-block mt-1">
+                                            <%= rack_component.component.height %>U • <%= rack_component.component.depth %>"
+                                        </div>
+                                    </div>
+                                <% end %>
                             </div>
                             
                             <!-- Drop zone indicator shown during drag -->
@@ -126,7 +157,7 @@
                 
                 <!-- Rack background grid lines -->
                 <% @server_rack.height.times do |i| %>
-                    <div class="absolute left-0 right-0 border-t border-gray-300 dark:border-gray-700" 
+                    <div class="absolute left-0 right-0 border-t border-gray-300 dark:border-gray-700 z-0" 
                          style="top: <%= i * 40 %>px; height: 1px; left: 30px;"></div>
                 <% end %>
             </div>

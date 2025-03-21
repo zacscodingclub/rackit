@@ -1,32 +1,146 @@
 <%= form_with(model: server_rack, class: "contents") do |form| %>
   <% if server_rack.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
-      <h2><%= pluralize(server_rack.errors.count, "error") %> prohibited this server_rack from being saved:</h2>
-
-      <ul class="list-disc ml-6">
-        <% server_rack.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+    <div id="error_explanation" class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-md">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800"><%= pluralize(server_rack.errors.count, "error") %> prohibited this server rack from being saved:</h3>
+          <div class="mt-2 text-sm text-red-700">
+            <ul class="list-disc pl-5 space-y-1">
+              <% server_rack.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   <% end %>
 
-  <div class="my-5">
-    <%= form.label :name %>
-    <%= form.text_field :name, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": server_rack.errors[:name].none?, "border-red-400 focus:outline-red-600": server_rack.errors[:name].any?}] %>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="space-y-6">
+      <div>
+        <%= form.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          </div>
+          <%= form.text_field :name, 
+              class: ["block w-full pl-10 border rounded-md py-2 px-3 focus:outline-none focus:ring-1 sm:text-sm", 
+                server_rack.errors[:name].any? ? 
+                "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500" : 
+                "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:bg-gray-800 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"],
+              placeholder: "Server Rack Name" %>
+          <% if server_rack.errors[:name].any? %>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          <% end %>
+        </div>
+        <% if server_rack.errors[:name].any? %>
+          <p class="mt-2 text-sm text-red-600"><%= server_rack.errors[:name].first %></p>
+        <% end %>
+      </div>
+
+      <div>
+        <%= form.label :height, "Height (in rack units)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
+          </div>
+          <%= form.number_field :height, 
+              class: ["block w-full pl-10 border rounded-md py-2 px-3 focus:outline-none focus:ring-1 sm:text-sm", 
+                server_rack.errors[:height].any? ? 
+                "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500" : 
+                "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:bg-gray-800 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"],
+              placeholder: "42", min: 1, max: 100 %>
+          <div class="absolute inset-y-0 right-0 flex items-center">
+            <div class="h-full py-0 pl-2 pr-4 border-transparent bg-transparent text-gray-500 dark:text-gray-400 sm:text-sm rounded-r-md">
+              U
+            </div>
+          </div>
+          <% if server_rack.errors[:height].any? %>
+            <div class="absolute inset-y-0 right-0 pr-10 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          <% end %>
+        </div>
+        <% if server_rack.errors[:height].any? %>
+          <p class="mt-2 text-sm text-red-600"><%= server_rack.errors[:height].first %></p>
+        <% else %>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Standard rack heights are 42U, 45U, or 48U</p>
+        <% end %>
+      </div>
+
+      <div>
+        <%= form.label :depth, "Depth (in inches)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+        <div class="mt-1 relative rounded-md shadow-sm">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+            </svg>
+          </div>
+          <%= form.number_field :depth, 
+              class: ["block w-full pl-10 border rounded-md py-2 px-3 focus:outline-none focus:ring-1 sm:text-sm", 
+                server_rack.errors[:depth].any? ? 
+                "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500" : 
+                "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:bg-gray-800 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"],
+              placeholder: "36", min: 1, max: 100 %>
+          <div class="absolute inset-y-0 right-0 flex items-center">
+            <div class="h-full py-0 pl-2 pr-4 border-transparent bg-transparent text-gray-500 dark:text-gray-400 sm:text-sm rounded-r-md">
+              inches
+            </div>
+          </div>
+          <% if server_rack.errors[:depth].any? %>
+            <div class="absolute inset-y-0 right-0 pr-14 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          <% end %>
+        </div>
+        <% if server_rack.errors[:depth].any? %>
+          <p class="mt-2 text-sm text-red-600"><%= server_rack.errors[:depth].first %></p>
+        <% else %>
+          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Common depths are 24", 30", 36", or 42"</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="space-y-6 bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Server Rack Information</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Configure your rack's physical specifications. The height is measured in rack units (U), where 1U = 1.75 inches. The depth is the internal usable depth of the rack measured in inches.
+      </p>
+      
+      <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+        <div class="flex items-center justify-between bg-blue-50 dark:bg-blue-900/30 p-3 border-b border-gray-300 dark:border-gray-600">
+          <span class="text-sm font-medium text-blue-700 dark:text-blue-300">Standard Rack Sizes</span>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-3">
+          <div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+            <p><strong>Height:</strong> Most racks are 42U (73.5"), 45U (78.75"), or 48U (84")</p>
+            <p><strong>Depth:</strong> Common depths include 24", 30", 36", and 42"</p>
+            <p><strong>Width:</strong> Standard 19" mounting rails (internal)</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="my-5">
-    <%= form.label :height %>
-    <%= form.number_field :height, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": server_rack.errors[:height].none?, "border-red-400 focus:outline-red-600": server_rack.errors[:height].any?}] %>
-  </div>
-
-  <div class="my-5">
-    <%= form.label :depth %>
-    <%= form.text_field :depth, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": server_rack.errors[:depth].none?, "border-red-400 focus:outline-red-600": server_rack.errors[:depth].any?}] %>
-  </div>
-
-  <div class="inline">
-    <%= form.submit class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+  <div class="mt-8 flex justify-end">
+    <%= form.submit "Save Server Rack", class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors" %>
   </div>
 <% end %>
